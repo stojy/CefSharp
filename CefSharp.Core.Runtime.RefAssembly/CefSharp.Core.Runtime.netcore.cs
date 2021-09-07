@@ -63,6 +63,7 @@ namespace CefSharp.Core
         public static System.Threading.Tasks.TaskFactory FileThreadTaskFactory { get { throw null; } set { } }
         public static System.Threading.Tasks.TaskFactory IOThreadTaskFactory { get { throw null; } set { } }
         public static bool IsInitialized { get { throw null; } }
+        public static bool IsShutdown { get { throw null; } }
         public static System.Threading.Tasks.TaskFactory UIThreadTaskFactory { get { throw null; } set { } }
         public static bool AddCrossOriginWhitelistEntry(string sourceOrigin, string targetProtocol, string targetDomain, bool allowTargetSubdomains) { throw null; }
         public static void AddDisposable(System.IDisposable item) { }
@@ -87,8 +88,6 @@ namespace CefSharp.Core
         public static void PreShutdown() { }
         public static void QuitMessageLoop() { }
         public static void RefreshWebPlugins() { }
-        public static void RegisterWidevineCdm(string path, CefSharp.IRegisterCdmCallback callback) { }
-        public static System.Threading.Tasks.Task<CefSharp.CdmRegistration> RegisterWidevineCdmAsync(string path) { throw null; }
         public static bool RemoveCrossOriginWhitelistEntry(string sourceOrigin, string targetProtocol, string targetDomain, bool allowTargetSubdomains) { throw null; }
         public static void RemoveDisposable(System.IDisposable item) { }
         public static void RunMessageLoop() { }

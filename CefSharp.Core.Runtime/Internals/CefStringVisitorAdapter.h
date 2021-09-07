@@ -30,10 +30,10 @@ namespace CefSharp
 
             virtual void Visit(const CefString& string) override
             {
-                _visitor->Visit(StringUtils::ToClr(string));
+                _visitor->Visit(string.empty() ? String::Empty : StringUtils::ToClr(string));
             }
 
-            IMPLEMENT_REFCOUNTING(CefStringVisitorAdapter);
+            IMPLEMENT_REFCOUNTINGM(CefStringVisitorAdapter);
         };
     }
 }

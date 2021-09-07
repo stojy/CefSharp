@@ -1119,6 +1119,72 @@ namespace CefSharp
             }
         }
 
+        void ClientAdapter::OnFrameCreated(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame)
+        {
+            auto handler = _browserControl->FrameHandler;
+
+            if (handler != nullptr)
+            {
+                auto browserWrapper = GetBrowserWrapper(browser->GetIdentifier(), browser->IsPopup());
+                auto frameWrapper = gcnew CefFrameWrapper(frame);
+
+                handler->OnFrameCreated(_browserControl, browserWrapper, frameWrapper);
+            }
+        }
+
+        void ClientAdapter::OnFrameAttached(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame)
+        {
+            auto handler = _browserControl->FrameHandler;
+
+            if (handler != nullptr)
+            {
+                auto browserWrapper = GetBrowserWrapper(browser->GetIdentifier(), browser->IsPopup());
+                CefFrameWrapper frameWrapper(frame);
+
+                handler->OnFrameAttached(_browserControl, browserWrapper, % frameWrapper);
+            }
+        }
+
+        void ClientAdapter::OnFrameDetached(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame)
+        {
+            auto handler = _browserControl->FrameHandler;
+
+            if (handler != nullptr)
+            {
+                auto browserWrapper = GetBrowserWrapper(browser->GetIdentifier(), browser->IsPopup());
+                CefFrameWrapper frameWrapper(frame);
+
+                handler->OnFrameDetached(_browserControl, browserWrapper, % frameWrapper);
+            }
+        }
+
+        void ClientAdapter::OnMainFrameChanged(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> oldFrame, CefRefPtr<CefFrame> newFrame)
+        {
+            auto handler = _browserControl->FrameHandler;
+
+            if (handler != nullptr)
+            {
+                auto browserWrapper = GetBrowserWrapper(browser->GetIdentifier(), browser->IsPopup());
+
+                CefFrameWrapper^ oldFrameWrapper = nullptr;
+                if (oldFrame.get())
+                {
+                    oldFrameWrapper = gcnew CefFrameWrapper(oldFrame);
+                }
+
+                CefFrameWrapper^ newFrameWrapper = nullptr;
+                if (newFrame.get())
+                {
+                    newFrameWrapper = gcnew CefFrameWrapper(newFrame);
+                }
+
+                handler->OnMainFrameChanged(_browserControl, browserWrapper, oldFrameWrapper, newFrameWrapper);
+
+                delete oldFrameWrapper;
+                delete newFrameWrapper;
+            }
+        }
+
         bool ClientAdapter::OnProcessMessageReceived(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame, CefProcessId source_process, CefRefPtr<CefProcessMessage> message)
         {
             if (_disposed)
