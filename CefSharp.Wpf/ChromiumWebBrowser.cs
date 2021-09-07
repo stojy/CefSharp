@@ -19,6 +19,7 @@ using CefSharp.Structs;
 using CefSharp.Wpf.Experimental;
 using CefSharp.Wpf.Internals;
 using CefSharp.Wpf.Rendering;
+using log4net;
 using Microsoft.Win32.SafeHandles;
 using CursorType = CefSharp.Enums.CursorType;
 using Point = System.Windows.Point;
@@ -329,6 +330,10 @@ namespace CefSharp.Wpf
         //and support multiple dispatchers.
         static ChromiumWebBrowser()
         {
+            _logger = log4net.LogManager.GetLogger("WPF");
+
+            _logger.Info("hello");
+
             DefaultStyleKeyProperty.OverrideMetadata(
                 typeof(ChromiumWebBrowser),
                 new FrameworkPropertyMetadata(typeof(ChromiumWebBrowser)));
@@ -1557,6 +1562,9 @@ namespace CefSharp.Wpf
         public static readonly DependencyProperty WebBrowserProperty =
             DependencyProperty.Register(nameof(WebBrowser), typeof(IWebBrowser), typeof(ChromiumWebBrowser), new UIPropertyMetadata(defaultValue: null));
 
+        private static readonly ILog _logger;
+        private static int _previousY;
+
         #endregion WebBrowser dependency property
 
         /// <summary>
@@ -2145,6 +2153,8 @@ namespace CefSharp.Wpf
                 var point = e.GetPosition(this);
                 var modifiers = e.GetModifiers();
 
+                _logger.Info($"OnMouseMove: x={point.X}, y={point.Y}");
+
                 browser.GetHost().SendMouseMoveEvent((int)point.X, (int)point.Y, false, modifiers);
             }
 
@@ -2164,6 +2174,8 @@ namespace CefSharp.Wpf
                 var isShiftKeyDown = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift);
                 var pointX = (int)point.X;
                 var pointY = (int)point.Y;
+
+                _logger.Info($"OnMouseWheel: x={point.X}, y={point.Y}");
 
                 browser.SendMouseWheelEvent(
                     pointX,
@@ -2308,6 +2320,8 @@ namespace CefSharp.Wpf
                 }
                 else
                 {
+                    _logger.Info($"OnMouseButton: x={point.X}, y={point.Y}, mouseUp={mouseUp}");
+
                     browser.GetHost().SendMouseClickEvent((int)point.X, (int)point.Y, (MouseButtonType)e.ChangedButton, mouseUp, e.ClickCount, modifiers);
                 }
 
@@ -2350,6 +2364,7 @@ namespace CefSharp.Wpf
             base.OnTouchUp(e);
         }
 
+
         /// <summary>
         /// Handles a <see cref="E:Touch" /> event.
         /// </summary>
@@ -2364,41 +2379,97 @@ namespace CefSharp.Wpf
                 switch (touchPoint.Action)
                 {
                     case TouchAction.Down:
-                    {
-                        touchEventType = TouchEventType.Pressed;
-                        break;
-                    }
+                        {
+                            touchEventType = TouchEventType.Pressed;
+                            break;
+                        }
                     case TouchAction.Move:
-                    {
-                        touchEventType = TouchEventType.Moved;
-                        break;
-                    }
+                        {
+                            touchEventType = TouchEventType.Moved;
+                            break;
+                        }
                     case TouchAction.Up:
-                    {
-                        touchEventType = TouchEventType.Released;
-                        break;
-                    }
+                        {
+                            touchEventType = TouchEventType.Released;
+
+                            //FakeMoveEvent(e);
+                            //FakeMoveEvent(e);
+                            //FakeMoveEvent(e);
+                            //FakeMoveEvent(e);
+                            //FakeMoveEvent(e);
+                            //FakeMoveEvent(e);
+                            //FakeMoveEvent(e);
+                            //FakeMoveEvent(e);
+                            //FakeMoveEvent(e);
+                            //FakeMoveEvent(e);
+                            break;
+                        }
                     default:
-                    {
-                        touchEventType = TouchEventType.Cancelled;
-                        break;
-                    }
+                        {
+                            touchEventType = TouchEventType.Cancelled;
+                            break;
+                        }
                 }
 
-                var touchEvent = new TouchEvent()
-                {
-                    Id = e.TouchDevice.Id,
-                    X = (float)touchPoint.Position.X,
-                    Y = (float)touchPoint.Position.Y,
-                    PointerType = PointerType.Touch,
-                    Type = touchEventType,
-                    Modifiers = modifiers,
-                };
+                _logger.Info($"OnTouch: x={touchPoint.Position.X}, y={touchPoint.Position.Y}, type={touchEventType}, id={touchPoint.TouchDevice.Id}, device={touchPoint.TouchDevice}, modifiers={modifiers}");
 
-                browser.GetHost().SendTouchEvent(touchEvent);
+
+                if (touchPoint.Action == TouchAction.Up)
+                {
+                    _logger.Info($"OnTouch: up hacks.. x={touchPoint.Position.X}, y={touchPoint.Position.Y}, type={touchEventType}, modifiers={modifiers}");
+                    //touchDeviceId = 10;
+                    // Thread.Sleep(100);
+                }
+
+                if (touchPoint.Action == TouchAction.Down)
+                    _previousY = (int)touchPoint.Position.Y;
+
+                if (touchPoint.Action == TouchAction.Move)
+                {
+                    var deltaY = (int)(touchPoint.Position.Y -_previousY);
+                    _previousY = (int) touchPoint.Position.Y;
+
+                    var isShiftKeyDown = Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift);
+
+                    // todo; implement X delta.. isShiftKeyDown ? e.Delta : 0,
+                    browser.SendMouseWheelEvent((int)touchPoint.Position.X, (int)touchPoint.Position.Y, 0, !isShiftKeyDown ? deltaY: 0, modifiers);
+                }
+                else
+                {
+                    var touchEvent = new TouchEvent()
+                    {
+                        Id = e.TouchDevice.Id,
+                        X = (float)touchPoint.Position.X,
+                        Y = (float)touchPoint.Position.Y,
+                        PointerType = PointerType.Touch,
+                        Type = touchEventType,
+                        Modifiers = modifiers,
+                    };
+
+                    browser.GetHost().SendTouchEvent(touchEvent);
+                }
 
                 e.Handled = true;
             }
+        }
+
+        private void FakeMoveEvent(TouchEventArgs e)
+        {
+            var modifiers = WpfExtensions.GetModifierKeys();
+            var touchPoint = e.GetTouchPoint(this);
+
+            _logger.Info($"OnTouch: hack.. injecting fake events x={touchPoint.Position.X}, y={touchPoint.Position.Y}, was={touchPoint.Action}, new={TouchEventType.Moved}, modifiers={modifiers}");
+
+            var touchEvent = new TouchEvent()
+            {
+                Id = e.TouchDevice.Id,
+                X = (float)touchPoint.Position.X,
+                Y = (float)touchPoint.Position.Y,
+                PointerType = PointerType.Touch,
+                Type = TouchEventType.Moved,
+                Modifiers = modifiers,
+            };
+            browser.GetHost().SendTouchEvent(touchEvent);
         }
 
         protected override AutomationPeer OnCreateAutomationPeer()

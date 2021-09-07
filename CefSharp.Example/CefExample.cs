@@ -16,9 +16,9 @@ namespace CefSharp.Example
     {
         //TODO: Revert after https://bitbucket.org/chromiumembedded/cef/issues/2685/networkservice-custom-scheme-unable-to
         //has been fixed.
-        public const string ExampleDomain = "cefsharp.example";
-        public const string BaseUrl = "https://" + ExampleDomain;
-        public const string DefaultUrl = BaseUrl + "/home.html";
+        public const string ExampleDomain = "c:/tabapps/_temp";
+        public const string BaseUrl = "file://" + ExampleDomain;
+        public const string DefaultUrl = BaseUrl + "/kambi.html";
 #if NETCOREAPP
         public const string BindingTestUrl = BaseUrl + "/BindingTestNetCore.html";
 #else
